@@ -1,19 +1,23 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Navbar() {
     return (
-        <nav className="flex justify-center">
-            <ul className="flex gap-4">
-                <li>
-                    <Link href="/">Home</Link>
-                </li>
-                <li>
-                    <Link href="/about">About</Link>
-                </li>
-                <li>
-                    <Link href="/contact">Contact</Link>
-                </li>
-            </ul>
+        <nav className="flex justify-between w-full bg-[#008080]">
+
+            <Link href="/contact">Map</Link>
+
+            <Link href="/">
+                <Image
+                    src="/image1.png"
+                    alt="Home"
+                    width={80}
+                    height={80}
+                />
+
+            </Link>
+
+            <Link href="/">About</Link>
         </nav>
     );
 }
