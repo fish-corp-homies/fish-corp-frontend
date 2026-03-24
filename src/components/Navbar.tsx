@@ -5,7 +5,7 @@ export default function Navbar() {
     return (
         <nav className="flex justify-between w-full bg-[#008080]">
 
-            <Link href="/contact">Map</Link>
+            <Link href="/map">Map</Link>
 
             <Link href="/">
                 <Image
@@ -17,7 +17,7 @@ export default function Navbar() {
 
             </Link>
 
-            <Link href="/">About</Link>
+            <Link href="/about">About</Link>
         </nav>
     );
 }
