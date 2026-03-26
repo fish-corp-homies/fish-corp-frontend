@@ -1,4 +1,5 @@
-import { getOceanData } from '@/lib/api'
+import Location from "@/components/Location";
+import {redirect} from "next/navigation";
 
 export default function Page() {
 
@@ -6,10 +7,10 @@ export default function Page() {
         'use server'
 
         const rawFormData = {
-            lon: formData.get('lon'),
-            lat: formData.get('lat')
+            lon: formData.get('lon')?.toString(),
+            lat: formData.get('lat')?.toString()
         }
-
+        redirect(`/map/${rawFormData.lon}`)
     }
     return (
         <>
