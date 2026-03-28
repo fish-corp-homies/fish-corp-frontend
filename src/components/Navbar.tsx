@@ -1,23 +1,29 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
+import RetroButton from "@/components/RetroButton";
 
 export default function Navbar() {
+
     return (
-        <nav className="flex justify-between w-full bg-[#008080]">
+        <div className="outer-border">
+            <nav className="flex justify-between w-full inner-border p-2">
 
-            <Link href="/map">Map</Link>
+                <Link href="/map">
+                    {/*@ts-ignore*/}
+                    <RetroButton> <div>Map</div> </RetroButton>
+                </Link>
 
-            <Link href="/">
-                <Image
-                    src="/image1.png"
-                    alt="Home"
-                    width={80}
-                    height={80}
-                />
+                <Link href="/">
+                    {/*@ts-ignore*/}
+                    <RetroButton> <div>Home</div> </RetroButton>
+                </Link>
 
-            </Link>
-
-            <Link href="/about">About</Link>
-        </nav>
-    );
-}
+                <Link href="/about">
+                    {/*@ts-ignore*/}
+                    <RetroButton> <div>About</div> </RetroButton>
+                </Link>
+            </nav>
+        </div>
+            );
+    };

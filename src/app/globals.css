@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.outer-border {
+  @apply border-t-2 border-l-2 border-t-gray-100 border-l-gray-100 border-b-2 border-r-2 border-b-gray-900 border-r-gray-900;
+}
+
+.inner-border {
+  @apply border-t-2 border-l-2 border-t-gray-200 border-l-gray-200 border-b-2 border-r-2 border-b-gray-600 border-r-gray-600 bg-gray-400;
+}
+
+.pressed-outer-border {
+  @apply border-t-2! border-l-2! border-t-gray-900! border-l-gray-900! border-b-2! border-r-2! border-b-gray-100! border-r-gray-100!;
+}
+
+.pressed-inner-border {
+  @apply bg-gray-300! border-t-2! border-l-2! border-t-gray-600! border-l-gray-600! border-b-2! border-r-2! border-b-gray-200! border-r-gray-200!;
+}
