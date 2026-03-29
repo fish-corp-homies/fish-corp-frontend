@@ -14,10 +14,17 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body>
-                <Navbar/>
+        <body className="min-h-screen bg-slate-50">
+
+            <div className="pb-16">
                 {children}
-            </body>
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 z-50">
+                <Navbar />
+            </div>
+
+        </body>
         </html>
     );
 }
