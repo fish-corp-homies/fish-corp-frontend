@@ -1,12 +1,13 @@
-export default function Location(
-    lat: string | undefined,
-    lon: string | undefined
-) {
+interface LocationProps {
+    lat: number | undefined;
+    lon: number | undefined;
+}
 
-    return(
+export default function Location({ lat, lon }: LocationProps) {
+    return (
         <>
             <p>Lat: {lat}</p>
             <p>Lon: {lon}</p>
         </>
-    )
+    );
 }

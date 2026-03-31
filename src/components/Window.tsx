@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import RetroButton from "@/components/RetroButton";
 
@@ -51,7 +53,12 @@ export default function Window() {
 
                 </div>
                 <img src="https://instagram.fosl3-2.fna.fbcdn.net/v/t51.75761-15/501070469_18465905875075963_73448687709549686_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=MzY0MTk1Nzk2ODg0MTUwMTczNQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6InhwaWRzLjcwMXg0NjEuc2RyLkMzIn0%3D&_nc_ohc=fWBYRjjCOuMQ7kNvwGgM376&_nc_oc=AdpHiAmKnbXsqxuu2sP9HS0HezrxswE6kZPevEX_yk5zHKOU8NqO9ypUcu1fhDagdQfQWm4An0bAfvDcXbIPPJu2&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fosl3-2.fna&_nc_gid=6uF8VQXjJ2Ks1jin-Na3yw&_nc_ss=7a32e&oh=00_Afw49YRB7JYPzcQ6HS32FBNSyd-Lz_oKwLTmbH0u-nTDQQ&oe=69CEC02F"/>
-                <RetroButton onClick={getPosition}>test</RetroButton>
+                <RetroButton onClick={getPosition}>Get Location</RetroButton>
+                {error && (
+                    <div className="mt-2 p-2 bg-red-100 text-red-800 text-sm">
+                        {error}
+                    </div>
+                )}
                 {coords.lat !== null && coords.lon !== null && (
                     <div className="mt-4 p-4 border rounded bg-slate-100">
                         {/* toFixed() works safely here because TS knows they are numbers now */}
