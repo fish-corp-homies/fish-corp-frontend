@@ -1,4 +1,4 @@
-export async function getOceanData(lat: File | string | null, lon: File | string | null) {
+export async function getOceanData(lat: number | null, lon: number | null) {
     const res = await fetch(
         `https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${lat}&lon=${lon}`,
         {

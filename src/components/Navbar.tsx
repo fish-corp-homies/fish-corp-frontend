@@ -24,21 +24,18 @@ export default function Navbar() {
             <nav className="flex justify-between w-full inner-border p-2">
 
                 <Link href="/">
-                    {/*@ts-ignore*/}
                     <RetroButton>
                         <div>Home🐟</div>
                     </RetroButton>
                 </Link>
 
                 <Link href="/map">
-                    {/*@ts-ignore*/}
                     <RetroButton>
                         <div>Map</div>
                     </RetroButton>
                 </Link>
 
                 <Link href="/about">
-                    {/*@ts-ignore*/}
                     <RetroButton>
                         <div>About</div>
                     </RetroButton>

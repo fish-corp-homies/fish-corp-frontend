@@ -1,6 +1,13 @@
 import { useState } from 'react';
 
-export default function RetroButton({ children, onClick, padding = "px-4 py-1", minWidth = "min-w-[40px]" }) {
+interface RetroButtonProps {
+    children: React.ReactNode;
+    onClick?: () => void;
+    padding?: string;
+    minWidth?: string;
+}
+
+export default function RetroButton({ children, onClick, padding = "px-4 py-1", minWidth = "min-w-[40px]" }: RetroButtonProps) {
     const [isPressed, setIsPressed] = useState(false);
 
     const outerClass = isPressed ? "pressed-outer-border" : "outer-border";
@@ -16,9 +23,7 @@ export default function RetroButton({ children, onClick, padding = "px-4 py-1", 
             className="outline-none select-none block w-fit bg-transparent border-none p-0 cursor-pointer"
         >
             <div className={outerClass}>
-                {/* We use the 'padding' prop here */}
                 <div className={`${innerClass} ${padding}`}>
-                    {/* We use the 'minWidth' prop here */}
                     <div className={`${textShift} ${minWidth} flex items-center justify-center`}>
                         {children}
                     </div>
