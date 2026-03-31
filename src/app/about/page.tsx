@@ -2,7 +2,11 @@ type Factor = {
     icon: string;
     label: string;
     description: string;
-    details: string[];
+};
+
+type FishCondition = {
+    factor: string;
+    note: string;
 };
 
 type FishProfile = {
@@ -10,96 +14,49 @@ type FishProfile = {
     icon: string;
     optimalTemp: string;
     notes: string;
+    conditions: FishCondition[];
 };
 
 const WEATHER_FACTORS: Factor[] = [
     {
         icon: "🌡️",
         label: "Water Temperature",
-        description: "Water temperature is one of the most critical factors affecting fish activity and feeding behavior. Cold-blooded fish are directly influenced by the water around them.",
-        details: [
-            "Sea trout are most active between 8–16 °C",
-            "Below 5 °C fish slow down and feed less",
-            "Above 18 °C oxygen levels drop and fish become stressed",
-            "Temperature changes during tidal movement create feeding opportunities",
-        ],
+        description: "Water temperature governs fish metabolism and feeding drive. Cold-blooded fish are directly influenced by the water around them.",
     },
     {
         icon: "🌊",
         label: "Tidal Information",
         description: "Tides drive currents that concentrate baitfish and trigger predatory feeding. Understanding the tidal cycle helps you find the right window.",
-        details: [
-            "Incoming tide brings food and oxygenated water into estuaries",
-            "First two hours of flood and ebb are typically the most productive",
-            "Spring tides (new/full moon) produce stronger currents and more active fish",
-            "Neap tides give calmer, clearer water — adjust lure presentation accordingly",
-        ],
     },
     {
         icon: "📊",
         label: "Atmospheric Pressure",
-        description: "Barometric pressure affects fish swim bladders and therefore their depth preference and feeding drive. A falling barometer often triggers a feeding frenzy.",
-        details: [
-            "Falling pressure: fish become more active and move toward surface",
-            "Rising pressure: fish tend to settle deeper and feed less aggressively",
-            "Stable pressure: predictable behavior, fish follow normal feeding patterns",
-            "Rapid drops (storm fronts) can produce excellent short windows before conditions deteriorate",
-        ],
+        description: "Barometric pressure affects fish swim bladders and therefore their depth preference and feeding drive.",
     },
     {
         icon: "🌙",
         label: "Moon Phase",
-        description: "The moon controls tidal amplitude and also influences fish feeding rhythms through solunar cycles — peak feeding times tied to the moon's position.",
-        details: [
-            "Full and new moons produce the strongest tides (spring tides)",
-            "Solunar major periods occur when the moon is directly overhead or underfoot",
-            "Sea trout are often most active around dusk, dawn, and solunar peaks",
-            "Night fishing under a full moon can be particularly productive for sea trout",
-        ],
+        description: "The moon controls tidal amplitude and influences fish feeding rhythms through solunar cycles — peak feeding times tied to the moon's position.",
     },
     {
         icon: "💨",
         label: "Wind",
-        description: "Wind stirs the water surface, reduces fish wariness, and pushes baitfish — and the predators that follow — to specific areas.",
-        details: [
-            "Onshore wind concentrates prey along shorelines and in bays",
-            "Light breeze creates ripple that masks the angler's presence",
-            "Strong winds above 8 m/s make presentation difficult and fish less catchable",
-            "Wind direction relative to current determines productive casting angles",
-        ],
+        description: "Wind stirs the surface, reduces fish wariness, and pushes baitfish — and the predators that follow — to specific areas.",
     },
     {
         icon: "🌧️",
-        label: "Precipitation & Freshwater Run-off",
-        description: "Rain affects both river and coastal fishing. Fresh water pouring into the sea changes salinity gradients, attracting migratory fish.",
-        details: [
-            "Significant rainfall triggers sea trout and salmon runs into rivers",
-            "Spate rivers fish best 24–48 hours after heavy rain as water clears",
-            "Run-off carries insects and invertebrates — sea trout follow baitfish moving to feed",
-            "Prolonged drought keeps fish locked in the sea; a good spate unlocks a river",
-        ],
+        label: "Precipitation & Run-off",
+        description: "Rain changes river levels and salinity gradients, directly triggering or pausing migration runs.",
     },
     {
         icon: "☁️",
         label: "Cloud Cover & Light",
-        description: "Light penetration directly affects visibility in the water column and fish confidence. Overcast skies are generally better for sea trout.",
-        details: [
-            "Overcast conditions reduce light — sea trout venture into shallow water",
-            "Bright, sunny days push fish into deeper, darker water",
-            "Dawn and dusk are prime regardless of cloud cover",
-            "In clear water, bright conditions require smaller, more natural presentations",
-        ],
+        description: "Light penetration affects visibility in the water column and fish confidence. Low light brings fish into shallower water.",
     },
     {
         icon: "🧂",
         label: "Salinity",
-        description: "Salinity gradients in estuaries attract sea trout as they transition between sea and fresh water. Knowing the mixing zone helps locate fish.",
-        details: [
-            "Sea trout stage in brackish estuaries before running upstream",
-            "Tidal influx of salt water pushes fish holding positions upstream and downstream",
-            "Low salinity after heavy rain draws fish closer to river mouths",
-            "Rapid salinity change can pause migration — fish hold until conditions stabilize",
-        ],
+        description: "Salinity gradients in estuaries attract migratory fish as they transition between salt and fresh water.",
     },
 ];
 
@@ -108,15 +65,33 @@ const FISH_PROFILES: FishProfile[] = [
         name: "Sea Trout",
         icon: "🐟",
         optimalTemp: "8–16 °C",
-        notes:
-            "Sea trout (Salmo trutta) are the primary focus. They are anadromous — born in rivers, they spend years at sea before returning to spawn. Feeding windows are often short and tied tightly to tidal movement, low light, and solunar peaks. Night fishing in estuaries and river mouths is classic. Key season is late spring through autumn.",
+        notes: "Sea trout (Salmo trutta) are the primary focus. Anadromous — born in rivers, they spend years at sea before returning to spawn. Feeding windows are short and tied tightly to tidal movement, low light, and solunar peaks. Night fishing in estuaries and river mouths is classic. Key season: late spring through autumn.",
+        conditions: [
+            { factor: "🌡️ Water Temp", note: "Most active 8–16 °C. Below 5 °C feeding drops sharply." },
+            { factor: "🌊 Tide", note: "First 2 hrs of flood tide in estuaries. Spring tides produce most movement." },
+            { factor: "📊 Pressure", note: "Falling barometer triggers surface feeding. Avoid rapid rises." },
+            { factor: "🌙 Moon", note: "Night fishing peaks around full moon. Solunar majors at dusk/dawn." },
+            { factor: "💨 Wind", note: "Light onshore breeze ideal. Flat calm makes fish spooky." },
+            { factor: "🌧️ Rain", note: "Spate after drought unlocks river runs. Fish 24–48 hrs after heavy rain." },
+            { factor: "☁️ Light", note: "Overcast brings fish shallow. Bright sun pushes them deep." },
+            { factor: "🧂 Salinity", note: "Stage in brackish estuaries. Low salinity after rain draws fish to river mouths." },
+        ],
     },
     {
         name: "Atlantic Salmon",
         icon: "🐠",
         optimalTemp: "4–14 °C",
-        notes:
-            "Atlantic salmon (Salmo salar) migrate from ocean feeding grounds to spawn in the rivers they were born in. They stop feeding actively once in fresh water, so timing spate conditions and using lures or flies that trigger aggression is key. Prefer cooler water than sea trout; best conditions are a rising, clearing river after rain.",
+        notes: "Atlantic salmon (Salmo salar) migrate from ocean feeding grounds to spawn in their home rivers. They stop feeding once in fresh water, so the goal is to trigger aggression rather than hunger. Best conditions are a rising, clearing river after rain. Prefer cooler water than sea trout.",
+        conditions: [
+            { factor: "🌡️ Water Temp", note: "Most active 4–14 °C. Above 18 °C fish become lethargic and stressed." },
+            { factor: "🌊 Tide", note: "Tidal push in lower rivers moves fish. Flood tide aids upstream migration." },
+            { factor: "📊 Pressure", note: "Stable or slowly falling pressure. Sharp rises stall migration." },
+            { factor: "🌙 Moon", note: "New and full moons coincide with stronger upstream movement." },
+            { factor: "💨 Wind", note: "Less critical than for sea trout. Upstream wind can aid river entry." },
+            { factor: "🌧️ Rain", note: "A spate is often essential — fish run best in rising to clearing water." },
+            { factor: "☁️ Light", note: "Overcast days produce more aggressive takes in clear pools." },
+            { factor: "🧂 Salinity", note: "Congregate at river mouths waiting for fresh water to drop into the river." },
+        ],
     },
 ];
 
@@ -157,7 +132,7 @@ export default function About() {
                             {FISH_PROFILES.map((fish) => (
                                 <div key={fish.name} className="outer-border">
                                     <div className="inner-border p-3">
-                                        <div className="flex items-center gap-2 mb-1">
+                                        <div className="flex items-center gap-2 mb-2">
                                             <span className="text-lg">{fish.icon}</span>
                                             <span className="font-bold text-sm">{fish.name}</span>
                                             <span className="ml-auto outer-border pressed-outer-border">
@@ -166,7 +141,15 @@ export default function About() {
                                                 </span>
                                             </span>
                                         </div>
-                                        <p className="text-xs leading-relaxed">{fish.notes}</p>
+                                        <p className="text-xs leading-relaxed mb-3">{fish.notes}</p>
+                                        <div className="flex flex-col gap-1">
+                                            {fish.conditions.map((c) => (
+                                                <div key={c.factor} className="flex gap-2 text-xs">
+                                                    <span className="font-bold whitespace-nowrap w-32 shrink-0">{c.factor}</span>
+                                                    <span className="leading-relaxed">{c.note}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -195,14 +178,7 @@ export default function About() {
                                             <span className="text-base">{factor.icon}</span>
                                             <span className="font-bold text-sm">{factor.label}</span>
                                         </div>
-                                        <p className="text-xs leading-relaxed mb-2">{factor.description}</p>
-                                        <ul className="list-none">
-                                            {factor.details.map((d, i) => (
-                                                <li key={i} className="text-xs before:content-['▸'] before:mr-1 leading-relaxed">
-                                                    {d}
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        <p className="text-xs leading-relaxed">{factor.description}</p>
                                     </div>
                                 </div>
                             ))}
