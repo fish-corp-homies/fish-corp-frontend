@@ -1,9 +1,15 @@
-export const dynamic = 'force-dynamic'
+'use client'
+import { useParams } from 'next/navigation'
 
-export default function LocationPage({params}: { params: { slug: string };}) {
+export function generateStaticParams() {
+    return []
+}
+
+export default function LocationPage() {
+    const { slug } = useParams()
     return (
         <div>
-            <p>{params.slug}</p>
+            <p>{slug}</p>
         </div>
     )
 }
