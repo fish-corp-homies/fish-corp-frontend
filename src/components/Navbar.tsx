@@ -43,7 +43,7 @@ export default function Navbar() {
 
                 <div className="pressed-outer-border flex items-center">
                     <div className="pressed-inner-border">
-                        <span className="text-[22px]">{timeString}</span>
+                        <span className="text-sm sm:text-[22px]">{timeString}</span>
                     </div>
                 </div>
 

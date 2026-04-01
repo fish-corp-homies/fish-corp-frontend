@@ -127,7 +127,7 @@ export default function Page() {
                         <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                             Ocean Conditions — {new Date(currentEntry!.time).toLocaleString()}
                         </div>
-                        <div className="p-4 pb-0 text-xs text-gray-600 grid grid-cols-2 gap-3">
+                        <div className="p-4 pb-0 text-xs text-gray-600 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <span className="font-bold">Requested:</span>{' '}
                                 {selectedPosition![0].toFixed(4)}°N, {selectedPosition![1].toFixed(4)}°E
@@ -137,7 +137,7 @@ export default function Page() {
                                 {oceanData!.geometry!.coordinates[1].toFixed(4)}°N, {oceanData!.geometry!.coordinates[0].toFixed(4)}°E
                             </div>
                         </div>
-                        <div className="p-4 grid grid-cols-2 gap-3">
+                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {CONDITION_LABELS.map(({ key, label, unit }) => {
                                 const value = currentDetails[key];
                                 if (value === undefined) return null;

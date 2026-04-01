@@ -145,7 +145,7 @@ export default function About() {
                                         <div className="flex flex-col gap-1">
                                             {fish.conditions.map((c) => (
                                                 <div key={c.factor} className="flex gap-2 text-xs">
-                                                    <span className="font-bold whitespace-nowrap w-32 shrink-0">{c.factor}</span>
+                                                    <span className="font-bold whitespace-nowrap w-24 sm:w-32 shrink-0">{c.factor}</span>
                                                     <span className="leading-relaxed">{c.note}</span>
                                                 </div>
                                             ))}
