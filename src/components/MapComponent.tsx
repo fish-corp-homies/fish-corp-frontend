@@ -46,7 +46,7 @@ export default function MapComponent({ onLocationSelect, selectedPosition, apiPo
         <MapContainer
             center={[65, 15]}
             zoom={5}
-            style={{ height: '500px', width: '100%', cursor: 'crosshair' }}
+            style={{ height: 'clamp(250px, 50vh, 500px)', width: '100%', cursor: 'crosshair' }}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
