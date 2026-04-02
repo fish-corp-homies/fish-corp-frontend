@@ -201,7 +201,7 @@ export default function Page() {
                                     />
                                     <Tooltip
                                         contentStyle={{ background: '#9CA3AF', border: '2px solid #4B5563', fontSize: 12 }}
-                                        formatter={(v: number) => [`${v.toFixed(1)} cm`, 'Height']}
+                                        formatter={(v) => [typeof v === 'number' ? `${v.toFixed(1)} cm` : v, 'Height']}
                                     />
                                     <Area
                                         type="monotone"
