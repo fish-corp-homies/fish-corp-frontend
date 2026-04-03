@@ -1,9 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    ComposedChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import RetroButton from '@/components/RetroButton';
 import { getOceanData, getTidalData, getSunrise, getWeatherForecast, TideForecastEntry, SunData, WeatherForecastData } from '@/lib/api';
@@ -60,17 +60,6 @@ export default function Page() {
     const [locating, setLocating] = useState(false);
     const [flyToPosition, setFlyToPosition] = useState<[number, number] | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [navOpen, setNavOpen] = useState(true);
-
-    const summaryRef = useRef<HTMLDivElement>(null);
-    const oceanRef = useRef<HTMLDivElement>(null);
-    const weatherRef = useRef<HTMLDivElement>(null);
-    const tidalRef = useRef<HTMLDivElement>(null);
-
-    function scrollTo(ref: React.RefObject<HTMLDivElement | null>) {
-        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
     function handleLocationSelect(lat: number, lon: number) {
         setSelectedPosition([lat, lon]);
     }
@@ -175,70 +164,8 @@ export default function Page() {
                 </div>
             </div>
 
-            {(hasSummary || currentDetails || weatherData || (tidalData && tidalData.length > 0)) && (
-                <div className="outer-border mb-4">
-                    <div className="inner-border p-0 overflow-hidden">
-                        <button
-                            onClick={() => setNavOpen(o => !o)}
-                            className="w-full bg-blue-800 text-white font-bold px-2 py-1 text-sm flex justify-between items-center cursor-pointer select-none"
-                        >
-                            <span>Sections</span>
-                            <span className="font-mono text-xs">{navOpen ? '[-]' : '[+]'}</span>
-                        </button>
-                        {navOpen && (
-                            <div className="p-3 flex flex-col gap-2">
-                                {hasSummary && (
-                                    <button onClick={() => scrollTo(summaryRef)} className="outer-border text-left w-full cursor-pointer">
-                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300 active:pressed-inner-border">
-                                            <span className="text-base select-none">◆</span>
-                                            <div>
-                                                <div className="font-bold text-sm">At a Glance</div>
-                                                <div className="text-xs text-gray-600">Water temp, tides, sunrise & sunset</div>
-                                            </div>
-                                        </div>
-                                    </button>
-                                )}
-                                {currentDetails && (
-                                    <button onClick={() => scrollTo(oceanRef)} className="outer-border text-left w-full cursor-pointer">
-                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300">
-                                            <span className="text-base select-none">〜</span>
-                                            <div>
-                                                <div className="font-bold text-sm">Ocean Conditions</div>
-                                                <div className="text-xs text-gray-600">Waves, currents & water temperature</div>
-                                            </div>
-                                        </div>
-                                    </button>
-                                )}
-                                {weatherData && (
-                                    <button onClick={() => scrollTo(weatherRef)} className="outer-border text-left w-full cursor-pointer">
-                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300">
-                                            <span className="text-base select-none">☁</span>
-                                            <div>
-                                                <div className="font-bold text-sm">Weather Forecast</div>
-                                                <div className="text-xs text-gray-600">Air temperature, wind & cloud cover</div>
-                                            </div>
-                                        </div>
-                                    </button>
-                                )}
-                                {tidalData && tidalData.length > 0 && (
-                                    <button onClick={() => scrollTo(tidalRef)} className="outer-border text-left w-full cursor-pointer">
-                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300">
-                                            <span className="text-base select-none">↕</span>
-                                            <div>
-                                                <div className="font-bold text-sm">Tidal Forecast</div>
-                                                <div className="text-xs text-gray-600">High & low tide chart and table</div>
-                                            </div>
-                                        </div>
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
             {hasSummary && (
-                <div ref={summaryRef} className="outer-border mb-4">
+                <div className="outer-border mb-4">
                     <div className="inner-border p-0 overflow-hidden">
                         <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                             At a glance
@@ -329,7 +256,7 @@ export default function Page() {
             )}
 
             {currentDetails && (
-                <div ref={oceanRef} className="outer-border mb-4">
+                <div className="outer-border mb-4">
                     <div className="inner-border p-0 overflow-hidden">
                         <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                             Ocean Conditions — {new Date(currentEntry!.time).toLocaleString()}
@@ -418,16 +345,19 @@ export default function Page() {
             {weatherData && (() => {
                 const current = weatherData.properties.timeseries[0];
                 const d = current?.data.instant.details;
-                const airTempSeries = weatherData.properties.timeseries
+                const hourlyForecast = weatherData.properties.timeseries
                     .slice(0, 48)
                     .map(e => ({
                         label: new Date(e.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
                             + ' ' + new Date(e.time).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
                         temp: e.data.instant.details.air_temperature,
+                        cloudTop: 100 - (e.data.instant.details.cloud_area_fraction ?? 0) * 0.4,
+                        cloud: e.data.instant.details.cloud_area_fraction ?? 0,
+                        precip: e.data.next_1_hours?.details.precipitation_amount ?? 0,
                     }))
                     .filter(e => e.temp !== undefined);
                 return (
-                    <div ref={weatherRef} className="outer-border mb-4">
+                    <div className="outer-border mb-4">
                         <div className="inner-border p-0 overflow-hidden">
                             <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                                 Weather Forecast
@@ -437,13 +367,25 @@ export default function Page() {
                                     {d.air_temperature !== undefined && (
                                         <div className="outer-border"><div className="inner-border px-3 py-2">
                                             <div className="text-xs text-gray-600">Air Temperature</div>
-                                            <div className="font-bold text-lg">{d.air_temperature.toFixed(1)}°C</div>
+                                            <div className="font-bold text-lg">{d.air_temperature.toFixed(1)} °C</div>
+                                        </div></div>
+                                    )}
+                                    {d.air_pressure_at_sea_level !== undefined && (
+                                        <div className="outer-border"><div className="inner-border px-3 py-2">
+                                            <div className="text-xs text-gray-600">Air Pressure</div>
+                                            <div className="font-bold text-lg">{d.air_pressure_at_sea_level.toFixed(0)} hPa</div>
                                         </div></div>
                                     )}
                                     {d.wind_speed !== undefined && (
                                         <div className="outer-border"><div className="inner-border px-3 py-2">
                                             <div className="text-xs text-gray-600">Wind Speed</div>
                                             <div className="font-bold text-lg">{d.wind_speed.toFixed(1)} m/s</div>
+                                        </div></div>
+                                    )}
+                                    {d.wind_from_direction !== undefined && (
+                                        <div className="outer-border"><div className="inner-border px-3 py-2">
+                                            <div className="text-xs text-gray-600">Wind Direction</div>
+                                            <div className="font-bold text-lg">{d.wind_from_direction.toFixed(0)}°</div>
                                         </div></div>
                                     )}
                                     {d.cloud_area_fraction !== undefined && (
@@ -458,27 +400,44 @@ export default function Page() {
                                             <div className="font-bold text-lg">{d.relative_humidity.toFixed(0)}%</div>
                                         </div></div>
                                     )}
+                                    {current?.data.next_1_hours?.details.precipitation_amount !== undefined && (
+                                        <div className="outer-border"><div className="inner-border px-3 py-2">
+                                            <div className="text-xs text-gray-600">Precipitation (1h)</div>
+                                            <div className="font-bold text-lg">{current.data.next_1_hours.details.precipitation_amount.toFixed(1)} mm</div>
+                                        </div></div>
+                                    )}
                                 </div>
                             )}
-                            {airTempSeries.length > 0 && (
+                            {hourlyForecast.length > 0 && (
                                 <div className="p-4">
                                     <div className="outer-border">
                                         <div className="inner-border p-0 overflow-hidden">
                                             <div className="bg-blue-800 text-white font-bold px-2 py-1 text-xs select-none">
-                                                Air Temperature — next 48 hours
+                                                Air Temperature & Cloud Cover — next 48 hours
                                             </div>
-                                            <div className="p-2">
-                                                <ResponsiveContainer width="100%" height={180}>
-                                                    <AreaChart data={airTempSeries} margin={{ top: 16, right: 8, bottom: 0, left: 0 }}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#9CA3AF" />
-                                                        <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#374151' }} interval="preserveStartEnd" />
-                                                        <YAxis tick={{ fontSize: 9, fill: '#374151' }} unit="°C" width={40} />
+                                            <div className="p-2" style={{ background: 'linear-gradient(to bottom, #7DD3FC 0%, #BAE6FD 60%, #E0F2FE 100%)' }}>
+                                                <ResponsiveContainer width="100%" height={220}>
+                                                    <ComposedChart data={hourlyForecast} margin={{ top: 8, right: 44, bottom: 0, left: 0 }}>
+                                                        <defs>
+                                                            <linearGradient id="cloudGrad" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="#1E293B" stopOpacity={0.9} />
+                                                                <stop offset="100%" stopColor="#94A3B8" stopOpacity={0.5} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.35)" />
+                                                        <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#1E3A5F' }} interval="preserveStartEnd" />
+                                                        <YAxis yAxisId="sky" domain={[0, 100]} hide />
+                                                        <YAxis yAxisId="temp" orientation="right" tick={{ fontSize: 9, fill: '#1E3A5F' }} unit="°C" width={36} />
                                                         <Tooltip
-                                                            contentStyle={{ background: '#9CA3AF', border: '2px solid #4B5563', fontSize: 12 }}
-                                                            formatter={(v) => [typeof v === 'number' ? `${v.toFixed(1)}°C` : v, 'Air Temp']}
+                                                            contentStyle={{ background: '#1E293B', border: '2px solid #475569', fontSize: 12, color: '#F1F5F9' }}
+                                                            formatter={(v, name) => {
+                                                                if (name === 'cloudTop') return [typeof v === 'number' ? `${((100 - v) / 0.4).toFixed(0)}%` : v, 'Cloud Cover'];
+                                                                return [typeof v === 'number' ? `${v.toFixed(1)}°C` : v, 'Air Temp'];
+                                                            }}
                                                         />
-                                                        <Area type="monotone" dataKey="temp" stroke="#92400E" fill="#FDE68A" strokeWidth={2} dot={false} />
-                                                    </AreaChart>
+                                                        <Area yAxisId="sky" type="monotone" dataKey="cloudTop" baseValue={100} fill="url(#cloudGrad)" stroke="rgba(148,163,184,0.4)" strokeWidth={1} />
+                                                        <Line yAxisId="temp" type="monotone" dataKey="temp" stroke="#F59E0B" strokeWidth={2.5} dot={false} />
+                                                    </ComposedChart>
                                                 </ResponsiveContainer>
                                             </div>
                                         </div>
@@ -491,7 +450,7 @@ export default function Page() {
             })()}
 
             {tidalData && tidalData.length > 0 && (
-                <div ref={tidalRef} className="outer-border">
+                <div className="outer-border">
                     <div className="inner-border p-0 overflow-hidden">
                         <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                             Tidal Forecast
