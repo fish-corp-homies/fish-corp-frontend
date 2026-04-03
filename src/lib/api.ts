@@ -1,3 +1,22 @@
+export interface OceanDetails {
+    sea_water_temperature?: number;
+    sea_surface_wave_height?: number;
+    sea_surface_wave_from_direction?: number;
+    sea_water_speed?: number;
+    sea_water_to_direction?: number;
+}
+
+export interface OceanData {
+    geometry?: { coordinates: [number, number] };
+    properties?: {
+        timeseries?: Array<{
+            time: string;
+            data: { instant: { details: OceanDetails } };
+        }>;
+    };
+    detail?: string;
+}
+
 export async function getOceanData(lat: number | null, lon: number | null) {
     const res = await fetch(
         `https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${lat}&lon=${lon}`,
