@@ -29,12 +29,6 @@ export default function Navbar() {
                     </RetroButton>
                 </Link>
 
-                <Link href="/map">
-                    <RetroButton>
-                        <div>Map</div>
-                    </RetroButton>
-                </Link>
-
                 <Link href="/about">
                     <RetroButton>
                         <div>About</div>
