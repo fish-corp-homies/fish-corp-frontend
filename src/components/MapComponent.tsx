@@ -2,7 +2,8 @@
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 const selectedIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -35,13 +36,22 @@ function ClickHandler({ onLocationSelect }: ClickHandlerProps) {
     return null;
 }
 
+function FlyToHandler({ position }: { position: [number, number] | null }) {
+    const map = useMap();
+    useEffect(() => {
+        if (position) map.flyTo(position, Math.max(map.getZoom(), 10));
+    }, [position, map]);
+    return null;
+}
+
 interface MapComponentProps {
     onLocationSelect: (lat: number, lon: number) => void;
     selectedPosition: [number, number] | null;
     apiPosition: [number, number] | null;
+    flyToPosition: [number, number] | null;
 }
 
-export default function MapComponent({ onLocationSelect, selectedPosition, apiPosition }: MapComponentProps) {
+export default function MapComponent({ onLocationSelect, selectedPosition, apiPosition, flyToPosition }: MapComponentProps) {
     return (
         <MapContainer
             center={[65, 15]}
@@ -53,6 +63,7 @@ export default function MapComponent({ onLocationSelect, selectedPosition, apiPo
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <ClickHandler onLocationSelect={onLocationSelect} />
+            <FlyToHandler position={flyToPosition} />
             {selectedPosition && (
                 <Marker position={selectedPosition} icon={selectedIcon} />
             )}

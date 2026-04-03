@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -57,10 +57,43 @@ export default function Page() {
     const [sunData, setSunData] = useState<SunData | null>(null);
     const [weatherData, setWeatherData] = useState<WeatherForecastData | null>(null);
     const [loading, setLoading] = useState(false);
+    const [locating, setLocating] = useState(false);
+    const [flyToPosition, setFlyToPosition] = useState<[number, number] | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [navOpen, setNavOpen] = useState(true);
+
+    const summaryRef = useRef<HTMLDivElement>(null);
+    const oceanRef = useRef<HTMLDivElement>(null);
+    const weatherRef = useRef<HTMLDivElement>(null);
+    const tidalRef = useRef<HTMLDivElement>(null);
+
+    function scrollTo(ref: React.RefObject<HTMLDivElement | null>) {
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
     function handleLocationSelect(lat: number, lon: number) {
         setSelectedPosition([lat, lon]);
+    }
+
+    function handleMyLocation() {
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser.');
+            return;
+        }
+        setLocating(true);
+        setError(null);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+                setSelectedPosition(coords);
+                setFlyToPosition(coords);
+                setLocating(false);
+            },
+            () => {
+                setError('Could not get your location. Check browser permissions.');
+                setLocating(false);
+            },
+        );
     }
 
     async function handleFetch() {
@@ -114,6 +147,7 @@ export default function Page() {
                     <MapComponent
                         onLocationSelect={handleLocationSelect}
                         selectedPosition={selectedPosition}
+                        flyToPosition={flyToPosition}
                         apiPosition={
                             oceanData?.geometry
                                 ? [oceanData.geometry.coordinates[1], oceanData.geometry.coordinates[0]]
@@ -132,14 +166,79 @@ export default function Page() {
                     ) : (
                         <span className="text-sm text-gray-600">No location selected — click on the map</span>
                     )}
+                    <RetroButton onClick={handleMyLocation} padding="px-4 py-1">
+                        {locating ? 'Locating...' : 'My Location'}
+                    </RetroButton>
                     <RetroButton onClick={handleFetch} padding="px-6 py-1">
                         {loading ? 'Fetching...' : 'Get Conditions'}
                     </RetroButton>
                 </div>
             </div>
 
-            {hasSummary && (
+            {(hasSummary || currentDetails || weatherData || (tidalData && tidalData.length > 0)) && (
                 <div className="outer-border mb-4">
+                    <div className="inner-border p-0 overflow-hidden">
+                        <button
+                            onClick={() => setNavOpen(o => !o)}
+                            className="w-full bg-blue-800 text-white font-bold px-2 py-1 text-sm flex justify-between items-center cursor-pointer select-none"
+                        >
+                            <span>Sections</span>
+                            <span className="font-mono text-xs">{navOpen ? '[-]' : '[+]'}</span>
+                        </button>
+                        {navOpen && (
+                            <div className="p-3 flex flex-col gap-2">
+                                {hasSummary && (
+                                    <button onClick={() => scrollTo(summaryRef)} className="outer-border text-left w-full cursor-pointer">
+                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300 active:pressed-inner-border">
+                                            <span className="text-base select-none">◆</span>
+                                            <div>
+                                                <div className="font-bold text-sm">At a Glance</div>
+                                                <div className="text-xs text-gray-600">Water temp, tides, sunrise & sunset</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                )}
+                                {currentDetails && (
+                                    <button onClick={() => scrollTo(oceanRef)} className="outer-border text-left w-full cursor-pointer">
+                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300">
+                                            <span className="text-base select-none">〜</span>
+                                            <div>
+                                                <div className="font-bold text-sm">Ocean Conditions</div>
+                                                <div className="text-xs text-gray-600">Waves, currents & water temperature</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                )}
+                                {weatherData && (
+                                    <button onClick={() => scrollTo(weatherRef)} className="outer-border text-left w-full cursor-pointer">
+                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300">
+                                            <span className="text-base select-none">☁</span>
+                                            <div>
+                                                <div className="font-bold text-sm">Weather Forecast</div>
+                                                <div className="text-xs text-gray-600">Air temperature, wind & cloud cover</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                )}
+                                {tidalData && tidalData.length > 0 && (
+                                    <button onClick={() => scrollTo(tidalRef)} className="outer-border text-left w-full cursor-pointer">
+                                        <div className="inner-border px-3 py-2 flex items-center gap-3 hover:bg-gray-300">
+                                            <span className="text-base select-none">↕</span>
+                                            <div>
+                                                <div className="font-bold text-sm">Tidal Forecast</div>
+                                                <div className="text-xs text-gray-600">High & low tide chart and table</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {hasSummary && (
+                <div ref={summaryRef} className="outer-border mb-4">
                     <div className="inner-border p-0 overflow-hidden">
                         <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                             At a glance
@@ -230,7 +329,7 @@ export default function Page() {
             )}
 
             {currentDetails && (
-                <div className="outer-border mb-4">
+                <div ref={oceanRef} className="outer-border mb-4">
                     <div className="inner-border p-0 overflow-hidden">
                         <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                             Ocean Conditions — {new Date(currentEntry!.time).toLocaleString()}
@@ -328,7 +427,7 @@ export default function Page() {
                     }))
                     .filter(e => e.temp !== undefined);
                 return (
-                    <div className="outer-border mb-4">
+                    <div ref={weatherRef} className="outer-border mb-4">
                         <div className="inner-border p-0 overflow-hidden">
                             <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                                 Weather Forecast
@@ -392,7 +491,7 @@ export default function Page() {
             })()}
 
             {tidalData && tidalData.length > 0 && (
-                <div className="outer-border">
+                <div ref={tidalRef} className="outer-border">
                     <div className="inner-border p-0 overflow-hidden">
                         <div className="bg-blue-800 text-white font-bold px-2 py-1 text-sm select-none">
                             Tidal Forecast
