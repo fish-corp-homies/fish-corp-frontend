@@ -1,5 +1,5 @@
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 
 interface DataPoint {
@@ -16,10 +16,17 @@ interface MetricChartProps {
     valueFormatter?: (v: number) => string;
 }
 
+function isMidnightOrNoon(time: string): boolean {
+    const h = new Date(time).getHours();
+    return h === 0 || h === 12;
+}
+
 function formatTick(time: string): string {
     const d = new Date(time);
-    return d.toLocaleDateString('en-GB', { weekday: 'short' })
-        + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (d.getHours() === 0) {
+        return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+    }
+    return '12:00';
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,17 +40,21 @@ function AxisTick({ x, y, payload }: any) {
     );
 }
 
+
 export default function MetricChart({ data, title, unit, color = '#1E40AF', fill = '#BFDBFE', valueFormatter }: MetricChartProps) {
     const filtered = data.filter((e): e is { time: string; value: number } => e.value !== undefined);
     if (filtered.length === 0) return null;
 
-    const interval = Math.max(0, Math.floor(filtered.length / 5));
+    // Exclude the last 2 entries to avoid reference lines at the chart edge
+    const ticks = filtered
+        .filter((d, i) => isMidnightOrNoon(d.time) && i < filtered.length - 2)
+        .map(d => d.time);
 
     return (
         <div className="outer-border mt-3">
             <div className="inner-border p-0 overflow-hidden">
                 <div className="bg-blue-800 text-white font-bold px-2 py-1 text-xs select-none">
-                    {title} — next 48 hours
+                    {title}
                 </div>
                 <div className="p-2">
                     <ResponsiveContainer width="100%" height={210}>
@@ -52,10 +63,11 @@ export default function MetricChart({ data, title, unit, color = '#1E40AF', fill
                             <XAxis
                                 dataKey="time"
                                 tick={<AxisTick />}
-                                interval={interval}
+                                ticks={ticks}
+                                minTickGap={0}
                                 height={44}
                             />
-                            <YAxis tick={{ fontSize: 9, fill: '#374151' }} unit={unit} width={52} />
+                            <YAxis tick={{ fontSize: 9, fill: '#374151' }} unit={unit} width={52} domain={['auto', 'auto']} />
                             <Tooltip
                                 contentStyle={{ background: '#9CA3AF', border: '2px solid #4B5563', fontSize: 12 }}
                                 labelFormatter={(time) => {
@@ -67,6 +79,9 @@ export default function MetricChart({ data, title, unit, color = '#1E40AF', fill
                                 }}
                                 formatter={(v) => [typeof v === 'number' ? (valueFormatter ? valueFormatter(v) : `${v.toFixed(1)}${unit}`) : v, title]}
                             />
+                            {ticks.map(time => (
+                                <ReferenceLine key={time} x={time} stroke="rgba(30, 64, 175, 0.4)" strokeDasharray="4 4" />
+                            ))}
                             <Area type="monotone" dataKey="value" stroke={color} fill={fill} strokeWidth={2} dot={false} />
                         </AreaChart>
                     </ResponsiveContainer>

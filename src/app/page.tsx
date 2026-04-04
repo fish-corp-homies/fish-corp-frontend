@@ -1,7 +1,32 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+
+type TimeInterval = 'today' | 'tomorrow' | '48h' | 'week';
+
+const INTERVAL_LABELS: Record<TimeInterval, string> = {
+    today: 'Today',
+    tomorrow: 'Tomorrow',
+    '48h': '48 Hours',
+    week: 'A Week',
+};
+
+function getIntervalRange(interval: TimeInterval): [Date, Date] {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    switch (interval) {
+        case 'today': return [now, midnight];
+        case 'tomorrow': {
+            const end = new Date(midnight);
+            end.setDate(end.getDate() + 1);
+            return [midnight, end];
+        }
+        case '48h': return [now, new Date(now.getTime() + 48 * 60 * 60 * 1000)];
+        case 'week':  return [now, new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)];
+    }
+}
 import { getOceanData, getTidalData, getSunrise, getWeatherForecast, OceanData, TideForecastEntry, SunData, WeatherForecastData } from '@/lib/api';
 import SectionPanel from '@/components/SectionPanel';
 import MapControls from '@/components/map/MapControls';
@@ -29,6 +54,8 @@ export default function Page() {
     const [locating, setLocating] = useState(false);
     const [flyToPosition, setFlyToPosition] = useState<[number, number] | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [interval, setInterval] = useState<TimeInterval>('48h');
+    const [startTime, endTime] = useMemo(() => getIntervalRange(interval), [interval]);
 
     function handleLocationSelect(lat: number, lon: number) {
         setSelectedPosition([lat, lon]);
@@ -47,24 +74,31 @@ export default function Page() {
                 setSelectedPosition(coords);
                 setFlyToPosition(coords);
                 setLocating(false);
+                handleFetch(coords);
             },
             () => {
                 setError('Could not get your location. Check browser permissions.');
                 setLocating(false);
+                setSelectedPosition(null);
+                setOceanData(null);
+                setTidalData(null);
+                setSunData(null);
+                setWeatherData(null);
             },
         );
     }
 
-    async function handleFetch() {
-        if (!selectedPosition) return;
+    async function handleFetch(coords?: [number, number]) {
+        const position = coords ?? selectedPosition;
+        if (!position) return;
         setLoading(true);
         setError(null);
         try {
             const [oceanResult, tidalResult, sunResult, weatherResult] = await Promise.allSettled([
-                getOceanData(selectedPosition[0], selectedPosition[1]),
-                getTidalData(selectedPosition[0], selectedPosition[1]),
-                getSunrise(selectedPosition[0], selectedPosition[1]),
-                getWeatherForecast(selectedPosition[0], selectedPosition[1]),
+                getOceanData(position[0], position[1]),
+                getTidalData(position[0], position[1]),
+                getSunrise(position[0], position[1]),
+                getWeatherForecast(position[0], position[1]),
             ]);
 
             if (oceanResult.status === 'fulfilled') {
@@ -115,8 +149,24 @@ export default function Page() {
                 loading={loading}
                 locating={locating}
                 onMyLocation={handleMyLocation}
-                onFetch={handleFetch}
+                onFetch={() => handleFetch()}
             />
+
+            <div className="outer-border mb-4">
+                <div className="inner-border px-4 py-3 flex flex-wrap items-center gap-2">
+                    {(Object.keys(INTERVAL_LABELS) as TimeInterval[]).map(opt => (
+                        <div
+                            key={opt}
+                            className={`${interval === opt ? 'pressed-outer-border' : 'outer-border'} cursor-pointer select-none`}
+                            onClick={() => setInterval(opt)}
+                        >
+                            <div className={`${interval === opt ? 'pressed-inner-border' : 'inner-border'} px-3 py-1 text-xs font-bold`}>
+                                {INTERVAL_LABELS[opt]}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
             <AtAGlance
                 currentDetails={currentDetails}
@@ -139,11 +189,13 @@ export default function Page() {
                 currentTime={currentEntry?.time}
                 selectedPosition={selectedPosition}
                 oceanData={oceanData}
+                startTime={startTime}
+                endTime={endTime}
             />
 
-            <WeatherForecast weatherData={weatherData} />
+            <WeatherForecast weatherData={weatherData} startTime={startTime} endTime={endTime} />
 
-            <TidalForecast tidalData={tidalData} />
+            <TidalForecast tidalData={tidalData} startTime={startTime} endTime={endTime} />
         </div>
     );
 }
