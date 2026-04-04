@@ -32,9 +32,11 @@ const WEATHER_LABELS: WeatherConfig[] = [
 
 interface WeatherForecastProps {
     weatherData: WeatherForecastData | null;
+    startTime: Date;
+    endTime: Date;
 }
 
-export default function WeatherForecast({ weatherData }: WeatherForecastProps) {
+export default function WeatherForecast({ weatherData, startTime, endTime }: WeatherForecastProps) {
     const [selectedKey, setSelectedKey] = useState<WeatherKey | null>(null);
 
     if (!weatherData) return null;
@@ -51,8 +53,11 @@ export default function WeatherForecast({ weatherData }: WeatherForecastProps) {
         return d?.[key];
     }
 
+    const timeseries = weatherData.properties.timeseries
+        .filter(e => { const t = new Date(e.time); return t >= startTime && t < endTime; });
+
     function getChartData(key: WeatherKey) {
-        return weatherData!.properties.timeseries.slice(0, 48).map(e => ({
+        return timeseries.map(e => ({
             time: e.time,
             value: key === 'precipitation_amount'
                 ? e.data.next_1_hours?.details.precipitation_amount
@@ -116,7 +121,7 @@ export default function WeatherForecast({ weatherData }: WeatherForecastProps) {
                         </tr>
                     </thead>
                     <tbody>
-                        {weatherData.properties.timeseries.slice(0, 48).map((e, i) => {
+                        {timeseries.map((e, i) => {
                             const inst = e.data.instant.details;
                             const precip = e.data.next_1_hours?.details.precipitation_amount;
                             const dt = new Date(e.time);

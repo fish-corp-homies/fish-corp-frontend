@@ -31,9 +31,11 @@ interface OceanConditionsProps {
     currentTime: string | null | undefined;
     selectedPosition: [number, number] | null;
     oceanData: OceanData | null;
+    startTime: Date;
+    endTime: Date;
 }
 
-export default function OceanConditions({ currentDetails, currentTime, selectedPosition, oceanData }: OceanConditionsProps) {
+export default function OceanConditions({ currentDetails, currentTime, selectedPosition, oceanData, startTime, endTime }: OceanConditionsProps) {
     const [selectedKey, setSelectedKey] = useState<keyof OceanDetails | null>(null);
 
     if (!currentDetails) return null;
@@ -46,11 +48,11 @@ export default function OceanConditions({ currentDetails, currentTime, selectedP
 
     const selected = selectedKey ? CONDITION_LABELS.find(c => c.key === selectedKey) : null;
 
+    const timeseries = (oceanData?.properties?.timeseries ?? [])
+        .filter(e => { const t = new Date(e.time); return t >= startTime && t < endTime; });
+
     const chartData = selected
-        ? (oceanData?.properties?.timeseries ?? []).slice(0, 48).map(e => ({
-            time: e.time,
-            value: e.data.instant.details[selected.key],
-        }))
+        ? timeseries.map(e => ({ time: e.time, value: e.data.instant.details[selected.key] }))
         : [];
 
     return (
@@ -119,7 +121,7 @@ export default function OceanConditions({ currentDetails, currentTime, selectedP
                         </tr>
                     </thead>
                     <tbody>
-                        {(oceanData?.properties?.timeseries ?? []).slice(0, 48).map((e, i) => {
+                        {timeseries.map((e, i) => {
                             const d = e.data.instant.details;
                             const dt = new Date(e.time);
                             return (

@@ -2,15 +2,19 @@
 
 import { useState } from 'react';
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import SectionPanel from '@/components/SectionPanel';
 import { TideForecastEntry } from '@/lib/api';
 
 function formatTick(time: string): string {
     const d = new Date(time);
-    return d.toLocaleDateString('en-GB', { weekday: 'short' })
-        + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const h = d.getHours();
+    const m = d.getMinutes();
+    // Label as midnight/noon if within 3 hours of those marks
+    if (h < 3 || h >= 21) return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+    if (h >= 9 && h <= 15) return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,17 +28,52 @@ function AxisTick({ x, y, payload }: any) {
     );
 }
 
-interface TidalForecastProps {
-    tidalData: TideForecastEntry[] | null;
+
+/** Find the data entry closest to each midnight and noon within the data range. */
+function getMidnightNoonTicks(chartData: { time: string }[]): string[] {
+    if (chartData.length === 0) return [];
+
+    const start = new Date(chartData[0].time);
+    const end = new Date(chartData[chartData.length - 1].time);
+
+    const targets: Date[] = [];
+    const cursor = new Date(start);
+    cursor.setHours(0, 0, 0, 0);
+    while (cursor <= end) {
+        targets.push(new Date(cursor));
+        cursor.setHours(12);
+        targets.push(new Date(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+        cursor.setHours(0, 0, 0, 0);
+    }
+
+    const lastTime = chartData[chartData.length - 1].time;
+    const seen = new Set<string>();
+    return targets.map(target => {
+        const closest = chartData.reduce((best, curr) =>
+            Math.abs(new Date(curr.time).getTime() - target.getTime()) <
+            Math.abs(new Date(best.time).getTime() - target.getTime()) ? curr : best
+        );
+        return closest.time;
+    })
+    .filter(t => t !== lastTime) // exclude edge entry
+    .filter(t => { if (seen.has(t)) return false; seen.add(t); return true; });
 }
 
-export default function TidalForecast({ tidalData }: TidalForecastProps) {
+interface TidalForecastProps {
+    tidalData: TideForecastEntry[] | null;
+    startTime: Date;
+    endTime: Date;
+}
+
+export default function TidalForecast({ tidalData, startTime, endTime }: TidalForecastProps) {
     const [showChart, setShowChart] = useState(false);
 
     if (!tidalData || tidalData.length === 0) return null;
 
-    const chartData = tidalData.map(e => ({ time: e.dateTime, height: e.measurement.value }));
-    const interval = Math.max(0, Math.floor(chartData.length / 5));
+    const filtered = tidalData.filter(e => { const t = new Date(e.dateTime); return t >= startTime && t < endTime; });
+    const chartData = filtered.map(e => ({ time: e.dateTime, height: e.measurement.value }));
+    const ticks = getMidnightNoonTicks(chartData);
 
     return (
         <SectionPanel title="🌊 Tidal Forecast">
@@ -58,10 +97,11 @@ export default function TidalForecast({ tidalData }: TidalForecastProps) {
                                     <XAxis
                                         dataKey="time"
                                         tick={<AxisTick />}
-                                        interval={interval}
+                                        ticks={ticks}
+                                        minTickGap={0}
                                         height={44}
                                     />
-                                    <YAxis tick={{ fontSize: 9, fill: '#374151' }} unit=" cm" width={52} />
+                                    <YAxis tick={{ fontSize: 9, fill: '#374151' }} unit=" cm" width={52} domain={['auto', 'auto']} />
                                     <Tooltip
                                         contentStyle={{ background: '#9CA3AF', border: '2px solid #4B5563', fontSize: 12 }}
                                         labelFormatter={(time) => {
@@ -73,6 +113,9 @@ export default function TidalForecast({ tidalData }: TidalForecastProps) {
                                         }}
                                         formatter={(v) => [typeof v === 'number' ? `${v.toFixed(1)} cm` : v, 'Height']}
                                     />
+                                    {ticks.map(time => (
+                                        <ReferenceLine key={time} x={time} stroke="rgba(30, 64, 175, 0.4)" strokeDasharray="4 4" />
+                                    ))}
                                     <Area
                                         type="monotone"
                                         dataKey="height"
@@ -98,7 +141,7 @@ export default function TidalForecast({ tidalData }: TidalForecastProps) {
                         </tr>
                     </thead>
                     <tbody>
-                        {tidalData.map((entry, i) => {
+                        {filtered.map((entry, i) => {
                             const dt = new Date(entry.dateTime);
                             const isHigh = entry.status.toLowerCase() === 'high';
                             return (
